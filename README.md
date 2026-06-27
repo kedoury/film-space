@@ -2,9 +2,15 @@
   <img src="./assets/film-space-logo.png" alt="Film space" width="500" style="margin-bottom: 50px;"/>
 </div>
 
-**A virtual film studio on your iPhone — block out shots, place stand-ins, and walk through the scene with your device**
+**A virtual film studio on your iPhone — block out shots, perform camera moves in real life, and feed the result into AI style transfer**
 
-Film space is an iOS app for previsualizing film scenes in 3D. Set up a virtual studio with a grid floor, add human figure stand-ins, frame your shot in Edit mode, then switch to Camera mode to move through the space using your phone like a handheld camera. Record what you see and save it to your photo library.
+Film space is built for AI video workflows. Block a scene in 3D, then walk through it with your phone in Camera mode to perform real-world camera motion. Record that footage and bring it into a tool like Seedance 2.0 — the recording gives the model a clear reference for your blocking and camera path, so you can map the motion you performed in real life onto a stylized or generated output.
+
+Under the hood it's a lightweight virtual studio: grid floor, human stand-ins, lens presets, and on-device recording to your photo library.
+
+<div align="center">
+  <img src="./assets/film-space-demo.gif" alt="Film space — real-world camera motion mapped to a virtual scene and AI style transfer" width="618"/>
+</div>
 
 ---
 
@@ -12,6 +18,7 @@ Film space is an iOS app for previsualizing film scenes in 3D. Set up a virtual 
 
 Film space gives you a lightweight staging environment for blocking and camera exploration:
 
+- **AI style transfer workflow** — Record your scene here, then use that clip as a motion/camera reference in tools like Seedance 2.0 to apply a new look while preserving the path you walked in real life.
 - **Virtual studio** — A 3D space with a checkerboard floor, grid, and axis guides so you can orient subjects and camera positions.
 - **Human stand-ins** — Add, select, rotate, and reposition figure placeholders to block talent in the scene.
 - **Edit mode** — Orbit around the studio, zoom in and out, and arrange your blocking from a bird's-eye or close-up view.
