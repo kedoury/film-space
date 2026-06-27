@@ -2,15 +2,15 @@
   <img src="./assets/film-space-logo.png" alt="Film space" width="500" style="margin-bottom: 50px;"/>
 </div>
 
-**A virtual film studio on your iPhone — block out shots, perform camera moves in real life, and feed the result into AI style transfer**
+**3D camera motion capture with iPhone ARKit for AI style transfer**
 
 Film space is built for AI video workflows. Block a scene in 3D, then walk through it with your phone in Camera mode to perform real-world camera motion. Record that footage and bring it into a tool like Seedance 2.0 — the recording gives the model a clear reference for your blocking and camera path, so you can map the motion you performed in real life onto a stylized or generated output.
-
-Under the hood it's a lightweight virtual studio: grid floor, human stand-ins, lens presets, and on-device recording to your photo library.
 
 <div align="center">
   <img src="./assets/film-space-demo.gif" alt="Film space — real-world camera motion mapped to a virtual scene and AI style transfer" width="618"/>
 </div>
+
+Under the hood it's a lightweight virtual studio: grid floor, human stand-ins, lens presets, and on-device recording to your photo library.
 
 ---
 
