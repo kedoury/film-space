@@ -28,6 +28,14 @@ Film space gives you a lightweight staging environment for blocking and camera e
 
 Film space runs entirely on your device. Landscape orientation is recommended.
 
+<div align="center">
+  <p align="center">
+    <img src="./assets/film-space-camera-1.gif" alt="Film space Camera mode — outdoor blocking" width="400"/>
+    <img src="./assets/film-space-camera-2.gif" alt="Film space Camera mode — street scene" width="400"/>
+    <img src="./assets/film-space-camera-3.gif" alt="Film space Camera mode — studio grid" width="400"/>
+  </p>
+</div>
+
 ---
 
 ## Controls
