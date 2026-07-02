@@ -11,40 +11,74 @@ struct StudioToolbar: View {
     @Bindable var cameraController: OrbitCameraController
 
     @State private var rotateDirection: Float = 0
+    @State private var pitchDirection: Float = 0
+    @State private var liftDirection: Float = 0
     @State private var verticalDirection: Float = 0
     @State private var joystick: CGSize = .zero
 
     private let tick = Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()
     private let rotationSpeed: Float = 0.03
+    private let pitchSpeed: Float = 0.03
+    private let liftSpeed: Float = 0.02
     private let verticalSpeed: Float = 0.03
     private let joystickSpeed: Float = 0.05
 
     var body: some View {
-        let noSelection = sceneState.selectedHumanID == nil
+        let noSelection = !sceneState.hasSelection
         let noLock = cameraController.lockedTransform == nil
 
-        HStack(spacing: 0) {
-            // Left group — trailing aligned. Edit: rotate/add/delete bodies.
+        HStack(alignment: .bottom, spacing: 0) {
+            // Left group — trailing aligned. Edit: rotate/lift/add/delete bodies.
             // Camera: focal-length toggle.
-            HStack(spacing: 16) {
+            HStack(alignment: .bottom, spacing: 16) {
                 Spacer(minLength: 0)
 
                 if sceneState.mode == .edit {
-                    holdButton(systemName: "arrow.counterclockwise", disabled: noSelection) { active in
-                        rotateDirection = active ? 1 : 0
+                    // Rotation: vertical (pitch) sits above horizontal turn.
+                    VStack(spacing: 12) {
+                        HStack(spacing: 16) {
+                            holdButton(systemName: "arrow.up.circle", disabled: noSelection) { active in
+                                pitchDirection = active ? 1 : 0
+                            }
+
+                            holdButton(systemName: "arrow.down.circle", disabled: noSelection) { active in
+                                pitchDirection = active ? -1 : 0
+                            }
+                        }
+
+                        HStack(spacing: 16) {
+                            holdButton(systemName: "arrow.counterclockwise", disabled: noSelection) { active in
+                                rotateDirection = active ? 1 : 0
+                            }
+
+                            holdButton(systemName: "arrow.clockwise", disabled: noSelection) { active in
+                                rotateDirection = active ? -1 : 0
+                            }
+                        }
                     }
 
-                    holdButton(systemName: "arrow.clockwise", disabled: noSelection) { active in
-                        rotateDirection = active ? -1 : 0
+                    // Lift the selected object up / down.
+                    VStack(spacing: 12) {
+                        holdButton(systemName: "arrow.up.to.line", disabled: noSelection) { active in
+                            liftDirection = active ? 1 : 0
+                        }
+
+                        holdButton(systemName: "arrow.down.to.line", disabled: noSelection) { active in
+                            liftDirection = active ? -1 : 0
+                        }
                     }
 
                     VStack(spacing: 12) {
+                        circleButton(systemName: "cube") {
+                            sceneState.addBox()
+                        }
+
                         circleButton(systemName: "figure.stand") {
                             sceneState.addHuman()
                         }
 
                         circleButton(systemName: "trash", tint: .red, disabled: noSelection) {
-                            sceneState.deleteSelectedHuman()
+                            sceneState.deleteSelected()
                         }
                     }
                 } else {
@@ -58,7 +92,7 @@ struct StudioToolbar: View {
                 .padding(.horizontal, 16)
 
             // Right group: movement (edit only) + lock/return (both modes).
-            HStack(spacing: 16) {
+            HStack(alignment: .bottom, spacing: 16) {
                 if sceneState.mode == .edit {
                     VStack(spacing: 12) {
                         holdButton(systemName: "arrow.up") { active in
@@ -102,7 +136,13 @@ struct StudioToolbar: View {
         .padding(.horizontal, 24)
         .onReceive(tick) { _ in
             if rotateDirection != 0 {
-                sceneState.rotateSelectedHuman(by: rotateDirection * rotationSpeed)
+                sceneState.rotateSelected(by: rotateDirection * rotationSpeed)
+            }
+            if pitchDirection != 0 {
+                sceneState.pitchSelected(by: pitchDirection * pitchSpeed)
+            }
+            if liftDirection != 0 {
+                sceneState.liftSelected(by: liftDirection * liftSpeed)
             }
             if verticalDirection != 0 {
                 cameraController.moveVertically(by: verticalDirection * verticalSpeed)

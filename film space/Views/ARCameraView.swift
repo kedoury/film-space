@@ -86,15 +86,25 @@ struct ARCameraView: UIViewRepresentable {
         func rebuildScene() {
             guard let root = studioRoot else { return }
 
-            let signature = sceneState.humans
-                .map { "\($0.id)-\($0.position)-\($0.rotationY)" }
+            let humanSignature = sceneState.humans
+                .map { "\($0.id)-\($0.position)-\($0.rotationY)-\($0.rotationX)" }
                 .joined(separator: "|")
+            let boxSignature = sceneState.boxes
+                .map { "\($0.id)-\($0.position)-\($0.size)-\($0.rotationY)-\($0.rotationX)" }
+                .joined(separator: "|")
+            let signature = humanSignature + "#" + boxSignature
             guard signature != lastHumanSignature else { return }
             lastHumanSignature = signature
 
             SceneContentBuilder.syncHumans(
                 placements: sceneState.humans,
                 selectedID: nil,
+                into: root
+            )
+            SceneContentBuilder.syncBoxes(
+                objects: sceneState.boxes,
+                selectedID: nil,
+                selectedFace: nil,
                 into: root
             )
         }
