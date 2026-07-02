@@ -101,22 +101,15 @@ export function StudioToolbar() {
   const ctx = useSceneManager();
   const manager = ctx?.manager ?? null;
 
-  // Joystick 连续移动循环
+  // Joystick 连续移动循环（仅 edit 模式用；camera 模式靠真实走动）
   const joystickRef = useRef({ x: 0, y: 0 });
   useEffect(() => {
     const loop = setInterval(() => {
       const { x, y } = joystickRef.current;
       if (x === 0 && y === 0) return;
-      if (!manager) return;
-      if (mode === "edit") {
-        // 编辑模式：移动轨道相机 target
-        manager.orbitController.moveHorizontally(x * 0.05);
-        manager.orbitController.moveForward(-y * 0.05);
-      } else if (mode === "camera") {
-        // 相机模式：移动虚拟相机位置（陀螺仪管旋转，摇杆管位置）
-        manager.virtualController.moveHorizontal(x * 0.05);
-        manager.virtualController.moveForward(-y * 0.05);
-      }
+      if (!manager || mode !== "edit") return;
+      manager.orbitController.moveHorizontally(x * 0.05);
+      manager.orbitController.moveForward(-y * 0.05);
     }, 16);
     return () => clearInterval(loop);
   }, [manager, mode]);
@@ -289,14 +282,6 @@ export function StudioToolbar() {
               <CircleButton onClick={handleShoulderPlace}>
                 <PersonStanding className={ICON} />
               </CircleButton>
-              {/* Joystick（移动位置，陀螺仪管旋转） */}
-              <Joystick
-                value={joystickRef.current}
-                size={88}
-                onChange={(v) => {
-                  joystickRef.current = v;
-                }}
-              />
               {/* Lock */}
               <CircleButton onClick={handleCameraLock}>
                 <Lock className={ICON} />

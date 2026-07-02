@@ -28,6 +28,9 @@ interface StudioStore {
   cameraPose: OrbitCameraPose;
   locked: boolean;
 
+  // 相机模式屏幕方向：进入相机模式时锁定为该方向
+  cameraOrientation: "landscape" | "portrait";
+
   // AR 状态
   arSupported: boolean | null; // null = 未检测
   arActive: boolean;
@@ -57,6 +60,7 @@ interface StudioStore {
   // 相机
   setCameraPose: (pose: Partial<OrbitCameraPose>) => void;
   setLocked: (locked: boolean) => void;
+  setCameraOrientation: (orientation: "landscape" | "portrait") => void;
 
   // AR
   setARSupported: (supported: boolean | null) => void;
@@ -79,6 +83,7 @@ export const useStudioStore = create<StudioStore>((set) => ({
   isRecording: false,
   cameraPose: { ...DEFAULT_CAMERA_POSE },
   locked: false,
+  cameraOrientation: "landscape",
   arSupported: null,
   arActive: false,
   arError: null,
@@ -150,6 +155,8 @@ export const useStudioStore = create<StudioStore>((set) => ({
     set((s) => ({ cameraPose: { ...s.cameraPose, ...pose } })),
 
   setLocked: (locked) => set({ locked }),
+
+  setCameraOrientation: (orientation) => set({ cameraOrientation: orientation }),
 
   setARSupported: (supported) => set({ arSupported: supported }),
   setARActive: (active) => set({ arActive: active }),

@@ -5,7 +5,7 @@
 
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Folder, Film } from "lucide-react";
+import { ChevronLeft, Folder, Film, RectangleHorizontal, RectangleVertical } from "lucide-react";
 import type { SceneManager } from "@/engine/SceneManager";
 import { StudioCanvas } from "@/components/Studio/StudioCanvas";
 import { RecordingBar } from "@/components/Studio/RecordingBar";
@@ -25,7 +25,9 @@ export function StudioPage() {
   const arSupported = useStudioStore((s) => s.arSupported);
   const arActive = useStudioStore((s) => s.arActive);
   const recordingBlob = useStudioStore((s) => s.recordingBlob);
+  const cameraOrientation = useStudioStore((s) => s.cameraOrientation);
   const setARActive = useStudioStore((s) => s.setARActive);
+  const setCameraOrientation = useStudioStore((s) => s.setCameraOrientation);
 
   const showARPrompt =
     arSupported === true &&
@@ -80,6 +82,36 @@ export function StudioPage() {
               <Film className="w-4 h-4" />
               视频库
             </Link>
+          </div>
+        </div>
+
+        {/* 顶部右侧：相机模式屏幕方向切换 */}
+        <div className="absolute top-3 right-4 z-20 flex items-center gap-2">
+          <div className="glass-panel rounded-full p-1 flex items-center gap-0.5">
+            <button
+              onClick={() => setCameraOrientation("landscape")}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition ${
+                cameraOrientation === "landscape"
+                  ? "bg-white text-studio-black"
+                  : "text-studio-light hover:text-white"
+              }`}
+              title="横屏运镜"
+            >
+              <RectangleHorizontal className="w-4 h-4" />
+              横屏
+            </button>
+            <button
+              onClick={() => setCameraOrientation("portrait")}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition ${
+                cameraOrientation === "portrait"
+                  ? "bg-white text-studio-black"
+                  : "text-studio-light hover:text-white"
+              }`}
+              title="竖屏运镜"
+            >
+              <RectangleVertical className="w-4 h-4" />
+              竖屏
+            </button>
           </div>
         </div>
 

@@ -36,7 +36,7 @@ export function RecordingBar() {
             ) : (
               <Camera className="w-3 h-3" />
             )}
-            {mode === "edit" ? "EDIT" : arActive ? "GYRO" : "CAM"}
+            {mode === "edit" ? "EDIT" : arActive ? "AR" : "CAM"}
           </div>
         </div>
 
