@@ -1,5 +1,5 @@
-// AR 模式入口提示卡片
-// 检测到 WebXR AR 支持时从顶部下滑出现
+// 陀螺仪运镜入口提示卡片
+// 检测到 DeviceOrientationEvent 支持时从顶部下滑出现
 
 import { Smartphone, X } from "lucide-react";
 
@@ -16,16 +16,16 @@ export function ARPrompt({ onEnter, onDismiss }: ARPromptProps) {
           <Smartphone className="w-5 h-5 text-accent-film" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white">检测到 AR 支持</div>
+          <div className="text-sm font-semibold text-white">检测到陀螺仪支持</div>
           <div className="text-xs text-studio-light mt-0.5">
-            举着手机走动即可运镜，与 iOS 版体验一致
+            转动手机即可改变运镜方向，摇杆控制走位
           </div>
         </div>
         <button
           onClick={onEnter}
           className="px-4 py-2 rounded-lg bg-accent-film text-studio-black text-sm font-semibold hover:brightness-110 active:scale-95 transition"
         >
-          进入 AR
+          启用陀螺仪
         </button>
         <button
           onClick={onDismiss}

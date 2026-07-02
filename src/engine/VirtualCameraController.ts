@@ -33,24 +33,28 @@ export class VirtualCameraController {
 
   /** 沿相机水平投影的 right 方向移动 */
   moveHorizontal(delta: number): void {
-    // right = (cos(yaw), 0, -sin(yaw))
-    const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
+    // 用相机当前世界朝向计算 right 向量，兼容陀螺仪模式（旋转由 motionController 管）
+    const forward = new THREE.Vector3();
+    this.camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() > 0) forward.normalize();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
     this.camera.position.addScaledVector(right, delta);
-    this.applyToCamera();
   }
 
   /** 沿相机水平投影的 forward 方向移动 */
   moveForward(delta: number): void {
-    // forward = (-sin(yaw), 0, -cos(yaw))
-    const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
+    // 用相机当前世界朝向计算 forward 向量，兼容陀螺仪模式
+    const forward = new THREE.Vector3();
+    this.camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() > 0) forward.normalize();
     this.camera.position.addScaledVector(forward, delta);
-    this.applyToCamera();
   }
 
   /** 沿世界 Y 轴上下移动 */
   moveVertical(delta: number): void {
     this.camera.position.y += delta;
-    this.applyToCamera();
   }
 
   /** 设置焦段，更新 FOV（全画幅 36mm 传感器） */
