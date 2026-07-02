@@ -1,0 +1,25 @@
+# Railway 部署配置
+# 单服务架构：Express 同时提供 API 和前端静态文件
+
+[build]
+builder = "nixpacks"
+
+# 构建步骤：安装依赖 + 构建前端
+buildCommand = "npm install && npm run build"
+
+[deploy]
+# 生产启动：NODE_ENV=production 让 Express 服务 dist/ 静态文件
+startCommand = "npm run start:prod"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+
+# 持久化存储：场景 JSON + 视频 webm 文件
+[[deploy.volume]]
+source = "data"
+destination = "/data"
+
+# 环境变量（Railway 控制台设置）
+# PORT - Railway 自动注入
+# VOLUME_PATH - 默认 /data
+# MAX_UPLOAD_MB - 默认 50
+# NODE_ENV - 设为 production

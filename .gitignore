@@ -1,38 +1,28 @@
-# Xcode
-build/
-DerivedData/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata/
-*.xccheckout
-*.moved-aside
-*.xcuserstate
-*.xcscmblueprint
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Swift Package Manager
-.build/
-.swiftpm/
-Packages/
-Package.pins
-Package.resolved
+node_modules
+dist
+dist-ssr
+*.local
 
-# macOS
+# 后端运行时数据卷（场景/视频/索引）
+data
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-.AppleDouble
-.LSOverride
-
-# CocoaPods
-Pods/
-
-# Carthage
-Carthage/Build/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vite
