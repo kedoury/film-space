@@ -1,9 +1,13 @@
-// 底部浮动工具栏
-// 1:1 复刻 iOS StudioToolbar.swift 的功能
+// 底部浮动工具栏（手机适配版）
 // 编辑模式：旋转/添加/删除人形 + 升降/Joystick/Lock/Return
-// 相机模式：焦段 + 肩高/Lock/录制/Return
+// 相机模式：焦段 + 摇杆/Lock/肩高/录制/Return
+//
+// 布局原则：
+// - 底部左右分浮，不占满全宽，中间留空给画布
+// - 按钮尺寸 44px+ 适配手机触摸
+// - 模式切换按钮居中悬浮
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   RotateCcw,
   RotateCw,
@@ -21,7 +25,7 @@ import { useStudioStore } from "@/store/sceneStore";
 import { useSceneManager } from "./StudioContext";
 import { Joystick } from "./Joystick";
 
-// === 长按按钮：pointerDown 持续触发 16ms 间隔 ===
+// === 长按按钮 ===
 function HoldButton({
   onTick,
   disabled,
@@ -62,7 +66,7 @@ function HoldButton({
   );
 }
 
-// === 圆形玻璃按钮 ===
+// === 圆形玻璃按钮（44px 最小触摸尺寸） ===
 function CircleButton({
   children,
   className = "",
@@ -71,15 +75,14 @@ function CircleButton({
   return (
     <button
       {...props}
-      className={`w-14 h-14 rounded-full glass-button flex items-center justify-center text-white ${className}`}
+      className={`w-11 h-11 rounded-full glass-button flex items-center justify-center text-white ${className}`}
     >
       {children}
     </button>
   );
 }
 
-// === 图标尺寸常量 ===
-const ICON = "w-[22px] h-[22px]";
+const ICON = "w-5 h-5";
 const ICON_SM = "w-4 h-4";
 
 export function StudioToolbar() {
@@ -101,33 +104,37 @@ export function StudioToolbar() {
   const ctx = useSceneManager();
   const manager = ctx?.manager ?? null;
 
-  // Joystick 连续移动循环（仅 edit 模式用；camera 模式靠真实走动）
+  // Joystick 连续移动循环
+  // edit 模式：移动轨道相机 target
+  // camera 模式：移动虚拟相机位置（陀螺仪管旋转，摇杆管位置）
   const joystickRef = useRef({ x: 0, y: 0 });
   useEffect(() => {
     const loop = setInterval(() => {
       const { x, y } = joystickRef.current;
       if (x === 0 && y === 0) return;
-      if (!manager || mode !== "edit") return;
-      manager.orbitController.moveHorizontally(x * 0.05);
-      manager.orbitController.moveForward(-y * 0.05);
+      if (!manager) return;
+      if (mode === "edit") {
+        manager.orbitController.moveHorizontally(x * 0.05);
+        manager.orbitController.moveForward(-y * 0.05);
+      } else if (mode === "camera") {
+        manager.virtualController.moveHorizontal(x * 0.05);
+        manager.virtualController.moveForward(-y * 0.05);
+      }
     }, 16);
     return () => clearInterval(loop);
   }, [manager, mode]);
 
   const noSelection = !selectedHumanID;
 
-  // === 编辑模式 Lock ===
   const handleEditLock = () => {
     if (!manager) return;
     manager.orbitController.lockEditPose();
     setLocked(true);
   };
-  // === 编辑模式 Return ===
   const handleEditReturn = () => {
     if (!manager) return;
     manager.orbitController.returnToLockedTransform();
   };
-  // === 相机模式 Lock ===
   const handleCameraLock = () => {
     if (!manager) return;
     if (arActive) {
@@ -139,7 +146,6 @@ export function StudioToolbar() {
     }
     setLocked(true);
   };
-  // === 相机模式 Return ===
   const handleCameraReturn = () => {
     if (!manager) return;
     if (arActive) {
@@ -148,126 +154,103 @@ export function StudioToolbar() {
       manager.virtualController.returnToLocked();
     }
   };
-  // === 肩高放置 ===
   const handleShoulderPlace = () => {
     if (!manager) return;
     manager.orbitController.pendingShoulderPlacement = true;
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
-      <div className="flex items-center justify-between gap-4 px-6 py-4">
-        {/* === 左组 === */}
-        <div className="flex-1 flex items-center gap-3 pointer-events-auto">
-          {mode === "edit" ? (
-            <>
-              {/* 旋转左/右 长按 */}
-              <div className="flex gap-2">
+    <>
+      {/* === 左下角浮动按钮组 === */}
+      <div className="absolute bottom-4 left-4 z-10 flex items-end gap-2 pointer-events-auto">
+        {mode === "edit" ? (
+          <>
+            {/* 旋转 + 添加/删除 */}
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-1.5">
                 <HoldButton
                   onTick={() => rotateSelectedHuman(-0.03)}
                   disabled={noSelection}
-                  className="w-14 h-14 rounded-full glass-button flex items-center justify-center text-white disabled:opacity-40"
+                  className="w-11 h-11 rounded-full glass-button flex items-center justify-center text-white disabled:opacity-40"
                 >
                   <RotateCcw className={ICON} />
                 </HoldButton>
                 <HoldButton
                   onTick={() => rotateSelectedHuman(0.03)}
                   disabled={noSelection}
-                  className="w-14 h-14 rounded-full glass-button flex items-center justify-center text-white disabled:opacity-40"
+                  className="w-11 h-11 rounded-full glass-button flex items-center justify-center text-white disabled:opacity-40"
                 >
                   <RotateCw className={ICON} />
                 </HoldButton>
               </div>
-              {/* 添加 / 删除（垂直堆叠） */}
-              <div className="flex flex-col gap-1">
-                <CircleButton onClick={() => addHuman()} className="!w-10 !h-10">
+              <div className="flex gap-1.5">
+                <CircleButton onClick={() => addHuman()} className="!w-9 !h-9">
                   <UserPlus className={ICON_SM} />
                 </CircleButton>
                 <CircleButton
                   onClick={() => deleteSelectedHuman()}
                   disabled={noSelection}
-                  className="!w-10 !h-10 !text-status-rec"
+                  className="!w-9 !h-9 !text-status-rec"
                 >
                   <Trash2 className={ICON_SM} />
                 </CircleButton>
               </div>
-            </>
-          ) : (
-            <>
-              {/* 焦段按钮 */}
-              <button
-                onClick={() => cycleFocalLength()}
-                className="px-5 py-2.5 rounded-full glass-button text-white font-mono font-semibold flex items-center gap-2 hover:brightness-110 active:scale-95 transition"
+            </div>
+          </>
+        ) : (
+          <>
+            {/* 相机模式：摇杆（控制位移） */}
+            <Joystick
+              value={joystickRef.current}
+              size={76}
+              onChange={(v) => {
+                joystickRef.current = v;
+              }}
+            />
+            {/* 焦段 */}
+            <button
+              onClick={() => cycleFocalLength()}
+              className="px-3 py-2 rounded-full glass-button text-white font-mono font-semibold flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition text-xs"
+            >
+              <Camera className={ICON_SM} />
+              {focalLength}mm
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* === 右下角浮动按钮组 === */}
+      <div className="absolute bottom-4 right-4 z-10 flex items-end gap-2 pointer-events-auto">
+        {mode === "edit" ? (
+          <>
+            {/* 升降 */}
+            <div className="flex flex-col gap-1.5">
+              <HoldButton
+                onTick={() => manager?.orbitController.moveVertically(0.03)}
+                className="w-11 h-11 rounded-full glass-button flex items-center justify-center text-white"
               >
-                <Camera className={ICON_SM} />
-                {focalLength}mm
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* === 中间：模式切换 === */}
-        <div className="flex items-center gap-1 p-1 rounded-full glass-panel pointer-events-auto shadow-glass">
-          <button
-            className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 transition ${
-              mode === "edit"
-                ? "bg-white text-studio-black"
-                : "text-studio-light"
-            }`}
-            onClick={() => setMode("edit")}
-          >
-            <Edit className={ICON_SM} />
-            编辑
-          </button>
-          <button
-            className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 transition ${
-              mode === "camera"
-                ? "bg-white text-studio-black"
-                : "text-studio-light"
-            }`}
-            onClick={() => setMode("camera")}
-          >
-            <Camera className={ICON_SM} />
-            相机
-          </button>
-        </div>
-
-        {/* === 右组 === */}
-        <div className="flex-1 flex items-center justify-end gap-3 pointer-events-auto">
-          {mode === "edit" ? (
-            <>
-              {/* 升降 */}
-              <div className="flex gap-2">
-                <HoldButton
-                  onTick={() =>
-                    manager?.orbitController.moveVertically(0.03)
-                  }
-                  className="w-14 h-14 rounded-full glass-button flex items-center justify-center text-white"
-                >
-                  <ArrowUp className={ICON} />
-                </HoldButton>
-                <HoldButton
-                  onTick={() =>
-                    manager?.orbitController.moveVertically(-0.03)
-                  }
-                  className="w-14 h-14 rounded-full glass-button flex items-center justify-center text-white"
-                >
-                  <ArrowDown className={ICON} />
-                </HoldButton>
-              </div>
-              {/* Joystick */}
-              <Joystick
-                value={joystickRef.current}
-                size={88}
-                onChange={(v) => {
-                  joystickRef.current = v;
-                }}
-              />
-              {/* Lock */}
+                <ArrowUp className={ICON} />
+              </HoldButton>
+              <HoldButton
+                onTick={() => manager?.orbitController.moveVertically(-0.03)}
+                className="w-11 h-11 rounded-full glass-button flex items-center justify-center text-white"
+              >
+                <ArrowDown className={ICON} />
+              </HoldButton>
+            </div>
+            {/* Joystick */}
+            <Joystick
+              value={joystickRef.current}
+              size={76}
+              onChange={(v) => {
+                joystickRef.current = v;
+              }}
+            />
+            {/* Lock + Return */}
+            <div className="flex flex-col gap-1.5">
               <CircleButton onClick={handleEditLock}>
                 <Lock className={ICON} />
               </CircleButton>
-              {/* Return */}
               <CircleButton
                 onClick={handleEditReturn}
                 disabled={!locked}
@@ -275,46 +258,74 @@ export function StudioToolbar() {
               >
                 <Undo2 className={ICON} />
               </CircleButton>
-            </>
-          ) : (
-            <>
-              {/* 肩高放置 */}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* 相机模式：肩高 + Lock + 录制 + Return */}
+            <div className="flex flex-col gap-1.5">
               <CircleButton onClick={handleShoulderPlace}>
                 <PersonStanding className={ICON} />
               </CircleButton>
-              {/* Lock */}
               <CircleButton onClick={handleCameraLock}>
                 <Lock className={ICON} />
               </CircleButton>
-              {/* 录制按钮 */}
-              <button
-                onClick={() => setRecording(!isRecording)}
-                className="w-14 h-14 rounded-full glass-button flex items-center justify-center hover:brightness-110 active:scale-95 transition"
-              >
-                {isRecording ? (
-                  <div
-                    className="rounded bg-status-rec"
-                    style={{ width: 22, height: 22 }}
-                  />
-                ) : (
-                  <div
-                    className="rounded-full bg-status-rec"
-                    style={{ width: 30, height: 30 }}
-                  />
-                )}
-              </button>
-              {/* Return */}
-              <CircleButton
-                onClick={handleCameraReturn}
-                disabled={!locked}
-                className="!text-accent-film"
-              >
-                <Undo2 className={ICON} />
-              </CircleButton>
-            </>
-          )}
+            </div>
+            {/* 录制按钮 */}
+            <button
+              onClick={() => setRecording(!isRecording)}
+              className="w-12 h-12 rounded-full glass-button flex items-center justify-center hover:brightness-110 active:scale-95 transition"
+            >
+              {isRecording ? (
+                <div
+                  className="rounded bg-status-rec"
+                  style={{ width: 18, height: 18 }}
+                />
+              ) : (
+                <div
+                  className="rounded-full bg-status-rec"
+                  style={{ width: 26, height: 26 }}
+                />
+              )}
+            </button>
+            <CircleButton
+              onClick={handleCameraReturn}
+              disabled={!locked}
+              className="!text-accent-film"
+            >
+              <Undo2 className={ICON} />
+            </CircleButton>
+          </>
+        )}
+      </div>
+
+      {/* === 底部居中：模式切换 === */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
+        <div className="flex items-center gap-0.5 p-0.5 rounded-full glass-panel shadow-glass">
+          <button
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition ${
+              mode === "edit"
+                ? "bg-white text-studio-black"
+                : "text-studio-light"
+            }`}
+            onClick={() => setMode("edit")}
+          >
+            <Edit className="w-3 h-3" />
+            编辑
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 transition ${
+              mode === "camera"
+                ? "bg-white text-studio-black"
+                : "text-studio-light"
+            }`}
+            onClick={() => setMode("camera")}
+          >
+            <Camera className="w-3 h-3" />
+            相机
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

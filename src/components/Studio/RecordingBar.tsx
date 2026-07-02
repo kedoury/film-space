@@ -1,7 +1,7 @@
-// 顶部录制状态条
-// 显示模式徽章、录制时长、FPS
+// 顶部录制状态条（紧凑版，不遮挡画布）
+// 只在需要时显示：模式徽章始终显示，录制时长仅录制时显示
 
-import { Circle, Camera, Edit, Video } from "lucide-react";
+import { Circle, Camera, Edit } from "lucide-react";
 import { useStudioStore } from "@/store/sceneStore";
 
 function formatTime(ms: number): string {
@@ -20,43 +20,32 @@ export function RecordingBar() {
   const arActive = useStudioStore((s) => s.arActive);
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
-      <div className="flex items-center justify-between px-6 py-3">
-        {/* 左：模式徽章 */}
-        <div className="flex items-center gap-2">
-          <div
-            className={`px-3 py-1 rounded-full text-xs font-mono font-semibold flex items-center gap-1.5 ${
-              mode === "edit"
-                ? "bg-studio-panel/80 text-studio-light"
-                : "bg-accent-film/20 text-accent-film"
-            }`}
-          >
-            {mode === "edit" ? (
-              <Edit className="w-3 h-3" />
-            ) : (
-              <Camera className="w-3 h-3" />
-            )}
-            {mode === "edit" ? "EDIT" : arActive ? "AR" : "CAM"}
-          </div>
-        </div>
-
-        {/* 中：录制时长 */}
-        {isRecording && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-status-rec/20">
-            <Circle className="w-2.5 h-2.5 fill-status-rec text-status-rec animate-rec-pulse" />
-            <span className="font-mono text-sm text-white tabular-nums">
-              {formatTime(recordingMs)}
-            </span>
-          </div>
+    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex items-center gap-2">
+      {/* 模式徽章 */}
+      <div
+        className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold flex items-center gap-1 glass-panel ${
+          mode === "edit"
+            ? "text-studio-light"
+            : "text-accent-film"
+        }`}
+      >
+        {mode === "edit" ? (
+          <Edit className="w-2.5 h-2.5" />
+        ) : (
+          <Camera className="w-2.5 h-2.5" />
         )}
-
-        {/* 右：录制占位（保持对称） */}
-        <div className="w-20 flex justify-end">
-          {isRecording && (
-            <Video className="w-4 h-4 text-status-rec/60" />
-          )}
-        </div>
+        {mode === "edit" ? "EDIT" : arActive ? "GYRO" : "CAM"}
       </div>
+
+      {/* 录制时长（仅录制时显示） */}
+      {isRecording && (
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-status-rec/20 glass-panel">
+          <Circle className="w-2 h-2 fill-status-rec text-status-rec animate-rec-pulse" />
+          <span className="font-mono text-[10px] text-white tabular-nums">
+            {formatTime(recordingMs)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

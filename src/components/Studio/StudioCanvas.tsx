@@ -49,19 +49,10 @@ export function StudioCanvas({ managerRef, onReady }: StudioCanvasProps) {
       useStudioStore.setState({ recordingMs: ms });
     };
 
-    // 检测 WebXR AR 支持（6DoF：旋转 + 位置追踪，不显示相机画面）
-    if (navigator.xr?.isSessionSupported) {
-      navigator.xr
-        .isSessionSupported("immersive-ar")
-        .then((supported) => {
-          useStudioStore.setState({ arSupported: supported });
-        })
-        .catch(() => {
-          useStudioStore.setState({ arSupported: false });
-        });
-    } else {
-      useStudioStore.setState({ arSupported: false });
-    }
+    // 检测陀螺仪（DeviceOrientationEvent）支持
+    const motionSupported =
+      typeof window !== "undefined" && "DeviceOrientationEvent" in window;
+    useStudioStore.setState({ arSupported: motionSupported });
 
     // ResizeObserver
     const ro = new ResizeObserver(() => {
@@ -82,11 +73,11 @@ export function StudioCanvas({ managerRef, onReady }: StudioCanvasProps) {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // 键盘循环：相机模式下用 WASD 移动位置（仅虚拟相机降级模式；AR 模式下走路管位置）
+    // 键盘循环：相机模式下用 WASD 移动位置（陀螺仪管旋转，WASD 管位置）
     const keyLoop = setInterval(() => {
       if (!managerRef.current) return;
       const s = useStudioStore.getState();
-      if (s.mode !== "camera" || s.arActive) return;
+      if (s.mode !== "camera") return;
       const keys = keysRef.current;
       const speed = 0.05;
       const vc = managerRef.current.virtualController;
@@ -235,10 +226,10 @@ export function StudioCanvas({ managerRef, onReady }: StudioCanvasProps) {
         manager.orbitController.orbit(dx * 0.005, -dy * 0.005);
       }
     } else if (s.mode === "camera" && !s.arActive) {
-      // 虚拟运镜（无 AR）：鼠标拖动改变朝向
+      // 虚拟运镜（无陀螺仪）：鼠标拖动改变朝向
       manager.virtualController.lookDelta(-dx * 0.003, -dy * 0.003);
     }
-    // AR 模式下，触摸拖动不改变朝向（设备旋转管朝向），走路管位置
+    // 陀螺仪模式下，触摸拖动不改变朝向（设备旋转管朝向），位置移动由摇杆负责
   };
 
   const handlePointerUp = () => {

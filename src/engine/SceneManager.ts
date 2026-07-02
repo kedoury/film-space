@@ -10,7 +10,7 @@ import {
 import { makeStudioRoot } from "./SceneEnvironment";
 import { makeHumanFigure, setHumanSelected } from "./HumanFigureFactory";
 import { OrbitCameraController } from "./OrbitCameraController";
-import { WebXRARController } from "./WebXRARController";
+import { DeviceOrientationCameraController } from "./DeviceOrientationCameraController";
 import { VirtualCameraController } from "./VirtualCameraController";
 import { Recorder } from "./Recorder";
 
@@ -48,7 +48,7 @@ export class SceneManager {
   private studioRoot!: THREE.Group;
 
   orbitController!: OrbitCameraController;
-  private arController!: WebXRARController;
+  private motionController!: DeviceOrientationCameraController;
   virtualController!: VirtualCameraController;
   private recorder!: Recorder;
 
@@ -79,7 +79,7 @@ export class SceneManager {
     this.camera = new THREE.PerspectiveCamera(54.4, w / h, 0.1, 100);
 
     this.orbitController = new OrbitCameraController(this.camera);
-    this.arController = new WebXRARController(this.orbitController);
+    this.motionController = new DeviceOrientationCameraController(this.orbitController);
     this.virtualController = new VirtualCameraController(this.camera);
     this.recorder = new Recorder();
 
@@ -92,13 +92,9 @@ export class SceneManager {
 
   // === 渲染循环 ===
 
-  private renderFrame = (_time: number, frame?: XRFrame): void => {
-    if (this.mode === "camera" && this.arActive && frame) {
-      // AR 模式：用 WebXR 帧数据驱动 applyDeviceMotion 算法（6DoF：旋转 + 位置）
-      // 真实世界走动 → 设备 position 变化 → 虚拟相机跟着移动
-      this.arController.onFrame(frame, this.camera);
-    } else if (this.mode === "camera" && !this.arActive) {
-      // 虚拟相机降级模式：肩高放置由 SceneManager 处理
+  private renderFrame = (_time: number, _frame?: XRFrame): void => {
+    if (this.mode === "camera") {
+      // 肩高放置：跳到 target 处 1.5m 高
       if (this.orbitController.pendingShoulderPlacement) {
         const target = this.orbitController.target;
         this.camera.position.set(
@@ -106,7 +102,13 @@ export class SceneManager {
           OrbitCameraController.shoulderHeight,
           target.z,
         );
-        this.orbitController.pendingShoulderPlacement = false;
+        if (!this.arActive) {
+          this.orbitController.pendingShoulderPlacement = false;
+        }
+      }
+      if (this.arActive) {
+        // 陀螺仪模式：用 deviceorientation 数据驱动相机旋转（只改旋转，位置由 virtualController 管）
+        this.motionController.applyToCamera(this.camera);
       }
     }
     this.renderer.render(this.scene, this.camera);
@@ -136,22 +138,22 @@ export class SceneManager {
     if (mode === this.mode) return;
 
     if (mode === "camera") {
-      // 锁定编辑模式姿态，作为 AR/virtual 的起点
+      // 锁定编辑模式姿态，作为 motion/virtual 的起点
       this.orbitController.lockEditPose();
       const initPose = this.orbitController.getWorldTransform();
 
-      // 优先尝试 WebXR AR（6DoF：旋转 + 位置追踪，不显示相机画面）
-      if (await this.arController.isSupported()) {
+      // 优先尝试陀螺仪（DeviceOrientation），不进入 AR 会话、不显示相机画面
+      if (this.motionController.isSupported()) {
         try {
-          await this.arController.enter(this.renderer, initPose);
+          await this.motionController.enter(initPose);
           this.arActive = true;
         } catch {
-          // AR 会话创建失败，回退到虚拟相机
+          // 权限被拒绝或不可用，回退到虚拟相机
           this.arActive = false;
           this.virtualController.enter(initPose);
         }
       } else {
-        // 不支持 WebXR AR（PC / iOS Safari），使用虚拟相机
+        // 不支持陀螺仪，使用虚拟相机（鼠标拖动看方向）
         this.arActive = false;
         this.virtualController.enter(initPose);
       }
@@ -159,7 +161,7 @@ export class SceneManager {
     } else {
       // 切回 edit 模式
       if (this.arActive) {
-        await this.arController.exit();
+        this.motionController.exit();
         this.arActive = false;
       }
       // 从锁定姿态恢复轨道相机（保持当前 distance）
@@ -318,9 +320,7 @@ export class SceneManager {
   dispose(): void {
     this.renderer.setAnimationLoop(null);
     if (this.arActive) {
-      this.arController.exit().catch(() => {
-        // 释放时忽略 AR 退出错误
-      });
+      this.motionController.exit();
     }
     this.scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {

@@ -35,7 +35,6 @@ export function StudioPage() {
     mode === "camera" &&
     !arPromptDismissed;
 
-  // AR 重试：切回 edit 再切回 camera 触发 AR 重新入会
   const handleAREnter = async () => {
     const m = managerRef.current;
     if (!m) return;
@@ -44,7 +43,7 @@ export function StudioPage() {
       await m.setMode("camera");
       setARActive(m.arActive);
     } catch (err) {
-      console.error("AR 入会失败:", err);
+      console.error("陀螺仪启用失败:", err);
     }
   };
 
@@ -56,66 +55,60 @@ export function StudioPage() {
         {/* 3D 画布 */}
         <StudioCanvas managerRef={managerRef} onReady={setManager} />
 
-        {/* 顶部录制状态条 */}
+        {/* 顶部状态条（居中浮动，不遮挡） */}
         <RecordingBar />
 
-        {/* 顶部左侧导航 */}
-        <div className="absolute top-3 left-4 z-20 flex items-center gap-3">
+        {/* 左上角：返回 + 场景库/视频库（紧凑） */}
+        <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5">
           <Link
             to="/"
-            className="w-9 h-9 rounded-full glass-panel flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition"
+            className="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </Link>
-          <div className="flex items-center gap-1">
-            <Link
-              to="/scenes"
-              className="px-3 py-1.5 rounded-full glass-panel text-sm text-white flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition"
-            >
-              <Folder className="w-4 h-4" />
-              场景库
-            </Link>
-            <Link
-              to="/videos"
-              className="px-3 py-1.5 rounded-full glass-panel text-sm text-white flex items-center gap-1.5 hover:brightness-110 active:scale-95 transition"
-            >
-              <Film className="w-4 h-4" />
-              视频库
-            </Link>
-          </div>
+          <Link
+            to="/scenes"
+            className="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition"
+            title="场景库"
+          >
+            <Folder className="w-4 h-4" />
+          </Link>
+          <Link
+            to="/videos"
+            className="w-8 h-8 rounded-full glass-panel flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition"
+            title="视频库"
+          >
+            <Film className="w-4 h-4" />
+          </Link>
         </div>
 
-        {/* 顶部右侧：相机模式屏幕方向切换 */}
-        <div className="absolute top-3 right-4 z-20 flex items-center gap-2">
-          <div className="glass-panel rounded-full p-1 flex items-center gap-0.5">
-            <button
-              onClick={() => setCameraOrientation("landscape")}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition ${
-                cameraOrientation === "landscape"
-                  ? "bg-white text-studio-black"
-                  : "text-studio-light hover:text-white"
-              }`}
-              title="横屏运镜"
-            >
-              <RectangleHorizontal className="w-4 h-4" />
-              横屏
-            </button>
-            <button
-              onClick={() => setCameraOrientation("portrait")}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition ${
-                cameraOrientation === "portrait"
-                  ? "bg-white text-studio-black"
-                  : "text-studio-light hover:text-white"
-              }`}
-              title="竖屏运镜"
-            >
-              <RectangleVertical className="w-4 h-4" />
-              竖屏
-            </button>
-          </div>
+        {/* 右上角：横竖屏切换（紧凑） */}
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-0.5 p-0.5 rounded-full glass-panel">
+          <button
+            onClick={() => setCameraOrientation("landscape")}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
+              cameraOrientation === "landscape"
+                ? "bg-white text-studio-black"
+                : "text-studio-light"
+            }`}
+            title="横屏运镜"
+          >
+            <RectangleHorizontal className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setCameraOrientation("portrait")}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition ${
+              cameraOrientation === "portrait"
+                ? "bg-white text-studio-black"
+                : "text-studio-light"
+            }`}
+            title="竖屏运镜"
+          >
+            <RectangleVertical className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* AR 入口提示 */}
+        {/* 陀螺仪入口提示 */}
         {showARPrompt && (
           <ARPrompt
             onEnter={handleAREnter}
@@ -123,7 +116,7 @@ export function StudioPage() {
           />
         )}
 
-        {/* 底部工具栏 */}
+        {/* 底部浮动工具栏 */}
         <StudioToolbar />
 
         {/* 录制结果弹窗 */}
